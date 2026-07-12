@@ -107,10 +107,10 @@ body{
   background:var(--panel); border:1px solid var(--border); border-radius:16px;
   padding:16px; margin-bottom:16px;
 }
-.links-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.links-row{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
 .link-btn{
-  flex:1; min-width:140px; display:flex; align-items:center; justify-content:center; gap:6px;
-  padding:11px; border-radius:10px; text-decoration:none; font-size:0.85rem; font-weight:700;
+  width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:14px; border-radius:10px; text-decoration:none; font-size:0.9rem; font-weight:700;
   border:none; cursor:pointer; font-family:inherit;
 }
 .link-btn.youtube{ background:#ff3b30; color:#fff; }
@@ -194,6 +194,8 @@ body{
   <div class="brand">
     <div class="brand-mark">🎬</div>
     <div class="brand-name">Sub<span>Hub</span></div>
+    <div style="flex:1"></div>
+    <button id="authBtn" class="sub-icon-btn" onclick="handleAuthBtnClick()" title="تسجيل الدخول" style="width:38px; height:38px; font-size:1rem;">🔑</button>
   </div>
   <div class="source-toggle">
     <button class="source-btn active" id="srcBtnOMDB" onclick="setSource('OMDB')">OMDb (EN)</button>
@@ -220,28 +222,6 @@ body{
 </div>
 
 <!-- نافذة إضافة رابط ترجمة -->
-<div class="modal-bg" id="addSubModal">
-  <div class="modal-box">
-    <h4 id="subModalTitle">➕ إضافة رابط ترجمة</h4>
-    <input type="hidden" id="subEditingId" value="">
-    <label>اللغة</label>
-    <select id="subLangInput">
-      <option value="AR">🇸🇦 عربي</option>
-      <option value="EN">🇺🇸 English</option>
-      <option value="FR">🇫🇷 Français</option>
-      <option value="OTHER">أخرى</option>
-    </select>
-    <label>اسم الملف (اختياري، للعرض بس)</label>
-    <input type="text" id="subNameInput" placeholder="مثال: مترجم بواسطة أحمد ارتق">
-    <label>رابط التحميل المباشر (GitHub / Telegram / أي رابط مباشر)</label>
-    <input type="text" id="subUrlInput" placeholder="https://...">
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeAddSubModal()">إلغاء</button>
-      <button class="btn-save" onclick="saveSubtitle()">حفظ</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-bg" id="loginModal">
   <div class="modal-box">
     <h4>🔒 تسجيل دخول صاحب التطبيق</h4>
@@ -259,11 +239,24 @@ body{
 
 <div class="modal-bg" id="extraLinksModal">
   <div class="modal-box">
-    <h4>🔗 روابط إضافية لهالعنوان</h4>
+    <h4>⚙️ إعدادات هالعنوان</h4>
+    <input type="hidden" id="subEditingId" value="">
     <label>▶ رابط إعلان يوتيوب (تريلر)</label>
     <input type="text" id="youtubeInput" placeholder="https://youtube.com/watch?v=...">
     <label>📢 رابط منشور قناة تيليجرام</label>
     <input type="text" id="telegramInput" placeholder="https://t.me/artaq12/...">
+    <label id="subModalTitle" style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border); display:block;">➕ إضافة ترجمة جديدة (اختياري)</label>
+    <label>اللغة</label>
+    <select id="subLangInput">
+      <option value="AR">🇸🇦 عربي</option>
+      <option value="EN">🇺🇸 English</option>
+      <option value="FR">🇫🇷 Français</option>
+      <option value="OTHER">أخرى</option>
+    </select>
+    <label>اسم المترجم (اختياري، للعرض بس)</label>
+    <input type="text" id="subNameInput" placeholder="مثال: مترجم بواسطة أحمد ارتق">
+    <label>رابط تحميل الترجمة المباشر (GitHub / Telegram)</label>
+    <input type="text" id="subUrlInput" placeholder="https://...">
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeExtraLinksModal()">إلغاء</button>
       <button class="btn-save" onclick="saveExtraLinks()">حفظ</button>
@@ -414,6 +407,28 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 /* =======================================================
+   حالة تسجيل الدخول العامة — تتحدث تلقائيًا، وتتحكم بإظهار/إخفاء
+   أي زر تعديل أو حذف أو الإعدادات بكل الصفحة.
+   ======================================================= */
+let isLoggedIn = false;
+firebase.auth().onAuthStateChanged(function(user){
+  isLoggedIn = !!user;
+  const btn = document.getElementById('authBtn');
+  if(btn){
+    btn.textContent = isLoggedIn ? '🔓' : '🔑';
+    btn.title = isLoggedIn ? 'تسجيل الخروج' : 'تسجيل الدخول';
+  }
+  if(currentMovie) renderMovie(currentMovie); /* نعيد رسم الصفحة عشان تظهر/تختفي أزرار التعديل */
+});
+async function handleAuthBtnClick(){
+  if(isLoggedIn){
+    if(confirm('تسجيل الخروج؟')) await firebase.auth().signOut();
+  } else {
+    await openLoginModal();
+  }
+}
+
+/* =======================================================
    نقطة مهمة: بغض النظر أي مصدر استخدمت للبحث (OMDb أو TMDB)،
    الترجمات دايمًا بتترابط بـ"معرّف IMDb" (imdb_id) الموحّد،
    مو بمعرّف الموقع نفسه. هيك لو بحثت عن نفس الفيلم من أي مصدر،
@@ -473,16 +488,20 @@ async function renderMovie(m){
           <span class="sub-lang">${s.lang}</span>
           <span class="sub-name">${escapeHtml(s.name || 'ترجمة')}</span>
           <button class="sub-dl" onclick="downloadSubtitle('${escapeAttr(s.url)}', this)">⬇ تحميل</button>
-          <button class="sub-icon-btn" onclick="startEditSubtitle('${s.id}')" title="تعديل">✏️</button>
-          <button class="sub-icon-btn danger" onclick="deleteSubtitle('${s.id}')" title="حذف">🗑️</button>
+          ${isLoggedIn ? `<button class="sub-icon-btn" onclick="startEditSubtitle('${s.id}')" title="تعديل">✏️</button>` : ''}
+          ${isLoggedIn ? `<button class="sub-icon-btn danger" onclick="deleteSubtitle('${s.id}')" title="حذف">🗑️</button>` : ''}
         </div>`).join('')
     : `<div class="no-sub"><span class="icon">📭</span>الترجمة غير متوفرة حاليًا لهالعنوان</div>`;
 
   const linksRowHtml = (extras.youtube || extras.telegram) ? `
     <div class="links-row">
-      ${extras.youtube ? `<a class="link-btn youtube" href="${escapeAttr(extras.youtube)}" target="_blank">▶ الإعلان</a>` : ''}
-      ${extras.telegram ? `<a class="link-btn telegram" href="${escapeAttr(extras.telegram)}" target="_blank">📢 تيليجرام</a>` : ''}
+      ${extras.youtube ? `<a class="link-btn youtube" href="${escapeAttr(extras.youtube)}" target="_blank">▶ مشاهدة المقطع الدعائي</a>` : ''}
+      ${extras.telegram ? `<a class="link-btn telegram" href="${escapeAttr(extras.telegram)}" target="_blank">📢 تفاصيل أكثر عن الفيلم</a>` : ''}
     </div>` : '';
+
+  const settingsIconHtml = isLoggedIn
+    ? `<button class="sub-icon-btn" onclick="openExtraLinksModal()" title="الإعدادات">⚙️</button>`
+    : '';
 
   document.getElementById('content').innerHTML = `
     <div class="movie-card">
@@ -494,14 +513,14 @@ async function renderMovie(m){
         <div class="movie-overview">${escapeHtml(overview)}</div>
       </div>
     </div>
-    <div class="sub-section">
-      ${linksRowHtml}
-      <button class="add-sub-btn" onclick="openExtraLinksModal()">✏️ تعديل روابط الإعلان/تيليجرام</button>
-    </div>
+    ${(linksRowHtml || settingsIconHtml) ? `
+    <div class="sub-section" style="display:flex; align-items:flex-start; gap:10px;">
+      <div style="flex:1;">${linksRowHtml}</div>
+      ${settingsIconHtml}
+    </div>` : ''}
     <div class="sub-section">
       <h3>📄 الترجمات المتوفرة</h3>
       ${subsHtml}
-      <button class="add-sub-btn" onclick="openAddSubModal()">➕ إضافة رابط ترجمة لهالعنوان</button>
     </div>
   `;
 }
@@ -512,7 +531,9 @@ async function renderMovie(m){
    ======================================================= */
 async function getExtrasFor(movieId){
   try{
-    const doc = await db.collection('subtitles').doc(movieId).get();
+    const getPromise = db.collection('subtitles').doc(movieId).get();
+    const timeoutPromise = new Promise((_,rej)=>setTimeout(()=>rej(new Error('firestore-timeout')), 12000));
+    const doc = await Promise.race([getPromise, timeoutPromise]);
     if(!doc.exists) return {};
     const data = doc.data();
     return { youtube: data.youtube || '', telegram: data.telegram || '' };
@@ -526,6 +547,11 @@ async function openExtraLinksModal(){
   const extras = await getExtrasFor(currentMovie.id);
   document.getElementById('youtubeInput').value = extras.youtube || '';
   document.getElementById('telegramInput').value = extras.telegram || '';
+  document.getElementById('subEditingId').value = '';
+  document.getElementById('subModalTitle').textContent = '➕ إضافة ترجمة جديدة (اختياري)';
+  document.getElementById('subLangInput').value = 'AR';
+  document.getElementById('subNameInput').value = '';
+  document.getElementById('subUrlInput').value = '';
   document.getElementById('extraLinksModal').classList.add('open');
 }
 function closeExtraLinksModal(){
@@ -535,11 +561,29 @@ async function saveExtraLinks(){
   if(!currentMovie) return;
   const youtube = document.getElementById('youtubeInput').value.trim();
   const telegram = document.getElementById('telegramInput').value.trim();
+  const editingId = document.getElementById('subEditingId').value;
+  const subUrl = document.getElementById('subUrlInput').value.trim();
+  const subLang = document.getElementById('subLangInput').value;
+  const subName = document.getElementById('subNameInput').value.trim();
   const saveBtn = document.querySelector('#extraLinksModal .btn-save');
   saveBtn.textContent = 'جاري الحفظ...';
   saveBtn.disabled = true;
   try{
-    await db.collection('subtitles').doc(currentMovie.id).set({ youtube, telegram }, { merge: true });
+    const docRef = db.collection('subtitles').doc(currentMovie.id);
+    const update = { youtube, telegram };
+    /* لو فيه رابط ترجمة مكتوب، نضيفه كترجمة جديدة أو نعدّل وحدة موجودة (لو جاي من زر تعديل ✏️) */
+    if(subUrl){
+      const existing = await getSubtitlesFor(currentMovie.id);
+      let newItems;
+      if(editingId){
+        newItems = existing.map(s => s.id===editingId ? { id: editingId, lang: subLang, name: subName, url: subUrl } : s);
+      } else {
+        const newId = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+        newItems = [...existing, { id: newId, lang: subLang, name: subName, url: subUrl }];
+      }
+      update.items = newItems;
+    }
+    await docRef.set(update, { merge: true });
     closeExtraLinksModal();
     await renderMovie(currentMovie);
   }catch(err){
@@ -563,7 +607,9 @@ async function saveExtraLinks(){
    ======================================================= */
 async function getSubtitlesFor(movieId){
   try{
-    const doc = await db.collection('subtitles').doc(movieId).get();
+    const getPromise = db.collection('subtitles').doc(movieId).get();
+    const timeoutPromise = new Promise((_,rej)=>setTimeout(()=>rej(new Error('firestore-timeout')), 12000));
+    const doc = await Promise.race([getPromise, timeoutPromise]);
     if(!doc.exists) return [];
     return doc.data().items || [];
   }catch(err){
@@ -623,61 +669,19 @@ async function doLogin(){
   loginBtn.disabled = false;
 }
 
-async function openAddSubModal(){
-  if(!(await checkOwnerAccess())) return;
-  document.getElementById('subModalTitle').textContent = '➕ إضافة رابط ترجمة';
-  document.getElementById('subEditingId').value = '';
-  document.getElementById('subLangInput').value = 'AR';
-  document.getElementById('subNameInput').value = '';
-  document.getElementById('subUrlInput').value = '';
-  document.getElementById('addSubModal').classList.add('open');
-}
 async function startEditSubtitle(subId){
   if(!(await checkOwnerAccess())) return;
-  const subs = await getSubtitlesFor(currentMovie.id);
+  const [subs, extras] = await Promise.all([getSubtitlesFor(currentMovie.id), getExtrasFor(currentMovie.id)]);
   const target = subs.find(s=>s.id===subId);
   if(!target) return;
-  document.getElementById('subModalTitle').textContent = '✏️ تعديل رابط الترجمة';
+  document.getElementById('youtubeInput').value = extras.youtube || '';
+  document.getElementById('telegramInput').value = extras.telegram || '';
+  document.getElementById('subModalTitle').textContent = '✏️ تعديل رابط الترجمة المحددة';
   document.getElementById('subEditingId').value = subId;
   document.getElementById('subLangInput').value = target.lang;
   document.getElementById('subNameInput').value = target.name || '';
   document.getElementById('subUrlInput').value = target.url;
-  document.getElementById('addSubModal').classList.add('open');
-}
-function closeAddSubModal(){
-  document.getElementById('addSubModal').classList.remove('open');
-}
-async function saveSubtitle(){
-  if(!currentMovie) return;
-  const url = document.getElementById('subUrlInput').value.trim();
-  if(!url){ alert('لازم تحط رابط التحميل'); return; }
-  const lang = document.getElementById('subLangInput').value;
-  const name = document.getElementById('subNameInput').value.trim();
-  const editingId = document.getElementById('subEditingId').value;
-  const saveBtn = document.querySelector('.btn-save');
-  saveBtn.textContent = 'جاري الحفظ...';
-  saveBtn.disabled = true;
-  try{
-    const docRef = db.collection('subtitles').doc(currentMovie.id);
-    const existing = await getSubtitlesFor(currentMovie.id);
-    let newItems;
-    if(editingId){
-      /* تعديل: نستبدل نفس العنصر بنفس الـid بدل ما نضيف وحدة جديدة */
-      newItems = existing.map(s => s.id===editingId ? { id: editingId, lang, name, url } : s);
-    } else {
-      /* إضافة جديدة: id فريد مبني على الوقت + رقم عشوائي */
-      const newId = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-      newItems = [...existing, { id: newId, lang, name, url }];
-    }
-    await docRef.set({ items: newItems });
-    closeAddSubModal();
-    await renderMovie(currentMovie);
-  }catch(err){
-    console.error('Firestore write error', err);
-    alert('صار خطأ بالحفظ، تأكد من الاتصال وحاول مرة ثانية');
-  }
-  saveBtn.textContent = 'حفظ';
-  saveBtn.disabled = false;
+  document.getElementById('extraLinksModal').classList.add('open');
 }
 
 async function deleteSubtitle(subId){
