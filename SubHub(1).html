@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SubHub — مكتبة الترجمات</title>
+<style>
+:root{
+  --bg:#0a0e14; --panel:#111827; --panel2:#1a2332; --border:#243043;
+  --accent:#f5b942; --accent2:#38bdf8; --text:#e6e9ef; --muted:#7c8aa0;
+  --danger:#ef4444; --ok:#22c55e;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:'Segoe UI', Tahoma, Arial, sans-serif;
+  min-height:100vh; padding-bottom:40px;
+}
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:linear-gradient(180deg, #0a0e14 80%, transparent);
+  padding:16px 16px 8px;
+}
+.brand{
+  display:flex; align-items:center; gap:8px; margin-bottom:14px;
+}
+.brand-mark{
+  width:34px; height:34px; border-radius:9px;
+  background:linear-gradient(135deg, var(--accent), #d97706);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.1rem; flex-shrink:0;
+}
+.brand-name{ font-weight:800; font-size:1.15rem; letter-spacing:-0.3px; }
+.brand-name span{ color:var(--accent); }
+
+.search-wrap{ position:relative; }
+.search-row{ display:flex; gap:8px; align-items:stretch; }
+.search-input-wrap{ position:relative; flex:1; min-width:0; }
+.source-select{
+  flex-shrink:0; max-width:38%; padding:0 12px; border-radius:14px;
+  border:1px solid var(--border); background:var(--accent); color:#1a1305;
+  font-size:0.78rem; font-weight:700; outline:none; appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a1305'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat:no-repeat; background-position:left 10px center; background-size:16px;
+  padding-left:30px; text-align:right; cursor:pointer;
+}
+.search-box{
+  width:100%; padding:14px 36px 14px 40px; border-radius:14px;
+  border:1px solid var(--border); background:var(--panel);
+  color:var(--text); font-size:0.88rem; outline:none;
+}
+.search-box:focus{ border-color:var(--accent2); }
+.search-icon{
+  position:absolute; left:16px; top:50%; transform:translateY(-50%);
+  color:var(--muted); font-size:1.1rem; pointer-events:none;
+}
+.search-clear{
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  color:var(--muted); cursor:pointer; font-size:1rem; display:none;
+}
+
+.results-drop{
+  position:absolute; top:calc(100% + 8px); right:0; left:0;
+  background:var(--panel); border:1px solid var(--border); border-radius:14px;
+  max-height:60vh; overflow-y:auto; z-index:60;
+  box-shadow:0 12px 30px rgba(0,0,0,0.5);
+  display:none;
+}
+.results-drop.open{ display:block; }
+.result-row{
+  display:flex; gap:12px; padding:10px 12px; cursor:pointer;
+  border-bottom:1px solid var(--border);
+}
+.result-row:last-child{ border-bottom:none; }
+.result-row:active{ background:var(--panel2); }
+.result-poster{
+  width:42px; height:62px; border-radius:6px; object-fit:cover;
+  background:var(--panel2); flex-shrink:0;
+}
+.result-info{ min-width:0; flex:1; }
+.result-title{ font-size:0.92rem; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.result-year{ font-size:0.78rem; color:var(--muted); margin-top:2px; }
+.search-msg{ padding:16px; text-align:center; color:var(--muted); font-size:0.9rem; }
+
+.content{ padding:20px 16px 0; }
+
+.recent-section{ margin-bottom:24px; }
+.recent-section h3{ margin:0 0 12px; font-size:0.95rem; color:var(--muted); font-weight:700; }
+.recent-row{ display:flex; gap:12px; overflow-x:auto; padding-bottom:6px; -webkit-overflow-scrolling:touch; }
+.recent-card{ flex-shrink:0; width:100px; cursor:pointer; }
+.recent-card img{ width:100px; height:148px; border-radius:10px; object-fit:cover; background:var(--panel2); display:block; }
+.recent-card .rc-title{
+  font-size:0.75rem; color:var(--text); margin-top:6px; line-height:1.4;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+}
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--muted);
+}
+.empty-state .icon{ font-size:2.4rem; margin-bottom:10px; opacity:0.6; }
+.empty-state p{ font-size:0.9rem; line-height:1.7; margin:0; }
+
+.movie-card{
+  display:flex; gap:16px; background:var(--panel); border:1px solid var(--border);
+  border-radius:16px; padding:16px; margin-bottom:16px;
+}
+.movie-poster{
+  width:110px; height:165px; border-radius:10px; object-fit:cover;
+  flex-shrink:0; background:var(--panel2);
+}
+.movie-meta{ min-width:0; flex:1; }
+.movie-title{ font-size:1.15rem; font-weight:800; line-height:1.3; }
+.movie-year{ color:var(--accent2); font-size:0.85rem; margin-top:4px; font-weight:600; }
+.movie-rating{ color:var(--accent); font-size:0.82rem; margin-top:4px; }
+.movie-overview{
+  font-size:0.85rem; color:var(--muted); line-height:1.6; margin-top:10px;
+  display:-webkit-box; -webkit-line-clamp:5; -webkit-box-orient:vertical; overflow:hidden;
+}
+
+.sub-section{
+  background:var(--panel); border:1px solid var(--border); border-radius:16px;
+  padding:16px; margin-bottom:16px;
+}
+.links-row{ display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
+.link-btn{
+  width:100%; box-sizing:border-box; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:14px; border-radius:10px; text-decoration:none; font-size:0.9rem; font-weight:700;
+  border:none; cursor:pointer; font-family:inherit;
+}
+.link-btn.youtube{ background:#ff3b30; color:#fff; }
+.link-btn.telegram{ background:#229ed9; color:#fff; }
+.sub-section h3{ margin:0 0 12px; font-size:0.95rem; color:var(--muted); font-weight:700; }
+.sub-item{
+  display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:12px;
+  background:var(--panel2); border-radius:12px; margin-bottom:8px;
+}
+.sub-item:last-child{ margin-bottom:0; }
+.sub-meta{ flex-basis:100%; font-size:0.75rem; color:var(--muted); line-height:1.6; order:5; }
+.sub-lang{
+  background:rgba(56,189,248,0.15); color:var(--accent2);
+  padding:4px 10px; border-radius:8px; font-size:0.78rem; font-weight:700; flex-shrink:0;
+}
+.sub-name{ flex:1; font-size:0.85rem; color:var(--text); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sub-dl{
+  background:var(--accent); color:#1a1305; padding:8px 16px; border-radius:9px;
+  font-size:0.82rem; font-weight:800; text-decoration:none; flex-shrink:0;
+  border:none; cursor:pointer; font-family:inherit;
+}
+.sub-icon-btn{
+  background:transparent; border:1px solid var(--border); color:var(--muted);
+  width:32px; height:32px; border-radius:9px; font-size:0.85rem; cursor:pointer;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+}
+.sub-icon-btn:active{ background:var(--panel); }
+.sub-icon-btn.danger{ color:var(--danger); border-color:rgba(239,68,68,0.35); }
+.code-item{
+  display:flex; align-items:center; gap:8px; padding:10px;
+  background:var(--panel2); border-radius:10px; margin-bottom:6px; font-size:0.78rem;
+}
+.code-item .ci-name{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+.code-item .ci-code{ color:var(--muted); direction:ltr; }
+.code-status{ padding:3px 8px; border-radius:6px; font-size:0.7rem; font-weight:700; flex-shrink:0; }
+.code-status.active{ background:rgba(34,197,94,0.15); color:var(--ok); }
+.code-status.expired{ background:rgba(239,68,68,0.15); color:var(--danger); }
+.no-sub{
+  text-align:center; padding:24px 10px; color:var(--muted); font-size:0.88rem; line-height:1.7;
+}
+.no-sub .icon{ font-size:1.8rem; display:block; margin-bottom:8px; opacity:0.5; }
+
+.add-sub-btn{
+  width:100%; padding:12px; border-radius:10px; border:1px dashed var(--border);
+  background:transparent; color:var(--accent2); font-size:0.85rem; cursor:pointer;
+  margin-top:10px; font-weight:600;
+}
+
+/* نافذة إضافة ترجمة */
+.modal-bg{
+  position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:200;
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-bg.open{ display:flex; }
+.modal-box{
+  background:var(--panel); border-radius:20px 20px 0 0; padding:20px;
+  width:100%; max-width:480px; border-top:1px solid var(--border);
+  max-height:85vh; overflow-y:auto;
+}
+.modal-box h4{ margin:0 0 16px; font-size:1rem; }
+.modal-box label{ display:block; font-size:0.8rem; color:var(--muted); margin:12px 0 6px; }
+.modal-box input, .modal-box select{
+  width:100%; padding:11px 12px; border-radius:9px; border:1px solid var(--border);
+  background:var(--panel2); color:var(--text); font-size:0.9rem; outline:none;
+}
+.modal-actions{ display:flex; gap:10px; margin-top:18px; }
+.modal-actions button{
+  flex:1; padding:12px; border-radius:10px; border:none; font-size:0.9rem; font-weight:700; cursor:pointer;
+}
+.btn-cancel{ background:var(--panel2); color:var(--muted); }
+.btn-save{ background:var(--accent); color:#1a1305; }
+
+.setup-banner{
+  background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);
+  color:#fca5a5; padding:12px 14px; border-radius:12px; font-size:0.82rem;
+  line-height:1.7; margin:0 16px 12px;
+}
+.setup-banner a{ color:#fca5a5; }
+.spinner{
+  display:inline-block; width:16px; height:16px; border:2px solid var(--muted);
+  border-top-color:var(--accent2); border-radius:50%; animation:spin 0.7s linear infinite;
+}
+@keyframes spin{ to{ transform:rotate(360deg); } }
+</style>
+</head>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark" onclick="goHome()" style="cursor:pointer;">🎬</div>
+    <div class="brand-name" onclick="goHome()" style="cursor:pointer;">Sub<span>Hub</span></div>
+    <div style="flex:1"></div>
+    <button id="genCodeBtn" class="sub-icon-btn" onclick="openGenerateCodeModal()" title="توليد كود اشتراك" style="width:38px; height:38px; font-size:1rem; display:none; margin-left:8px;">🎟️</button>
+    <button id="authBtn" class="sub-icon-btn" onclick="handleAuthBtnClick()" title="تسجيل الدخول" style="width:38px; height:38px; font-size:1rem;">🔑</button>
+  </div>
+  <div class="search-wrap">
+    <div class="search-row">
+      <div class="search-input-wrap">
+        <input type="text" id="searchBox" class="search-box" placeholder="ابحث عن فيلم أو مسلسل...">
+        <span class="search-icon" onclick="manualSearch()" style="pointer-events:auto; cursor:pointer;">🔍</span>
+        <span class="search-clear" id="clearBtn" onclick="clearSearch()">✕</span>
+      </div>
+      <select id="sourceSelect" class="source-select" onchange="setSource(this.value)">
+        <option value="OMDB">OMDb (EN)</option>
+        <option value="TMDB">TMDB (عربي)</option>
+      </select>
+    </div>
+    <div class="results-drop" id="resultsDrop"></div>
+  </div>
+</div>
+
+<div id="apiKeyBanner" class="setup-banner" style="display:none;">
+  ⚠️ لازم تحط مفتاح OMDb الخاص فيك أول شي عشان يشتغل البحث. افتح الكود، دوّر على <code>OMDB_API_KEY</code>، وحط مفتاحك (بس اكتب إيميلك ويوصلك بالإيميل، من
+  <a href="https://www.omdbapi.com/apikey.aspx" target="_blank">omdbapi.com/apikey.aspx</a>).
+</div>
+
+<div class="content" id="content">
+  <div id="recentMoviesContainer"></div>
+  <div class="empty-state">
+    <div class="icon">🎞️</div>
+    <p>ابحث عن اسم فيلم بالأعلى<br>لتشوف معلوماته وتشيك إذا فيه ترجمة متوفرة</p>
+  </div>
+</div>
+
+<!-- نافذة إضافة رابط ترجمة -->
+<div class="modal-bg" id="loginModal">
+  <div class="modal-box">
+    <h4>🔒 تسجيل دخول صاحب التطبيق</h4>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="loginEmail" placeholder="you@example.com">
+    <label>كلمة السر</label>
+    <input type="password" id="loginPassword" placeholder="••••••••">
+    <div id="loginError" style="color:var(--danger); font-size:0.8rem; margin-top:8px; display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeLoginModal()">إلغاء</button>
+      <button class="btn-save" onclick="doLogin()">دخول</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="confirmModal" style="z-index:300;">
+  <div class="modal-box">
+    <h4 id="confirmModalTitle">⚠️ تأكيد</h4>
+    <p id="confirmModalMsg" style="color:var(--text); font-size:0.9rem; line-height:1.7; margin:0;"></p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="resolveConfirmModal(false)">إلغاء</button>
+      <button class="btn-save" id="confirmModalOkBtn" onclick="resolveConfirmModal(true)" style="background:var(--danger); color:#fff;">تأكيد</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="unlockCodeModal">
+  <div class="modal-box">
+    <h4>🔒 مشاهدة الفيلم — كود الاشتراك</h4>
+    <p style="color:var(--muted); font-size:0.85rem; line-height:1.7; margin:0 0 10px;">هالميزة تحتاج كود اشتراك فعّال. لو معك كود، اكتبه تحت. لو ما معك، تواصل معنا للاشتراك.</p>
+    <label>الكود</label>
+    <input type="text" id="unlockCodeInput" placeholder="مثال: AHMED-2026-X7K9" style="text-align:center; letter-spacing:1px; font-weight:700;">
+    <div id="unlockCodeError" style="color:var(--danger); font-size:0.8rem; margin-top:8px; display:none;"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeUnlockCodeModal()">إلغاء</button>
+      <button class="btn-save" onclick="submitUnlockCode()">تفعيل</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="generateCodeModal">
+  <div class="modal-box" style="max-height:85vh; overflow-y:auto;">
+    <h4>🎟️ توليد كود اشتراك جديد</h4>
+    <label>اسم المشترك (عشان تتذكره لاحقًا)</label>
+    <input type="text" id="codeCustomerName" placeholder="مثال: محمد العتيبي">
+    <label>مدة الاشتراك</label>
+    <div style="display:flex; gap:8px;">
+      <input type="number" id="codeDurationCount" value="1" min="1" style="width:80px; flex-shrink:0;">
+      <select id="codeDurationUnit" style="flex:1;">
+        <option value="1">يوم</option>
+        <option value="30" selected>شهر</option>
+        <option value="365">سنة</option>
+      </select>
+    </div>
+    <div id="generatedCodeBox" style="display:none; margin-top:16px; padding:14px; background:var(--panel2); border-radius:10px; text-align:center;">
+      <div style="color:var(--muted); font-size:0.78rem; margin-bottom:6px;">الكود الجاهز للإرسال:</div>
+      <div id="generatedCodeText" style="font-size:1.2rem; font-weight:800; color:var(--accent); letter-spacing:1px;"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeGenerateCodeModal()">إغلاق</button>
+      <button class="btn-save" onclick="generateSubCode()">توليد كود</button>
+    </div>
+
+    <label style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:block;">🔄 استبدال كود قديم (تغيّر متصفح / نسي كوده)</label>
+    <p style="color:var(--muted); font-size:0.78rem; margin:0 0 8px; line-height:1.6;">اكتب الكود القديم، وبنلغيه تلقائيًا ونعطيه كود جديد بنفس الاسم والمدة يلي تختارها فوق.</p>
+    <input type="text" id="replaceOldCodeInput" placeholder="الكود القديم" style="text-align:center; letter-spacing:1px;">
+    <div class="modal-actions">
+      <button class="btn-save" onclick="replaceSubCode()" style="width:100%;">استبدال بكود جديد</button>
+    </div>
+
+    <label style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border); display:block;">📋 كل الأكواد</label>
+    <button class="add-sub-btn" onclick="loadCodesList()">تحديث القائمة</button>
+    <div id="codesListBox" style="margin-top:10px;"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="extraLinksModal">
+  <div class="modal-box">
+    <h4>⚙️ إعدادات هالعنوان</h4>
+    <input type="hidden" id="subEditingId" value="">
+    <label>▶ رابط إعلان يوتيوب (تريلر)</label>
+    <input type="text" id="youtubeInput" placeholder="https://youtube.com/watch?v=...">
+    <label>📢 رابط منشور قناة تيليجرام</label>
+    <input type="text" id="telegramInput" placeholder="https://t.me/artaq12/...">
+    <label id="subModalTitle" style="margin-top:18px; padding-top:14px; border-top:1px solid var(--border); display:block;">➕ إضافة ترجمة جديدة (اختياري)</label>
+    <p style="color:var(--muted); font-size:0.75rem; margin:0 0 10px; line-height:1.6;">سيبها فاضية إذا ما بدك تضيف ترجمة جديدة الآن — ما رح تأثر على الترجمات الموجودة أصلاً أبدًا.</p>
+    <label>اللغة</label>
+    <select id="subLangInput">
+      <option value="AR">🇸🇦 عربي</option>
+      <option value="EN">🇺🇸 English</option>
+      <option value="FR">🇫🇷 Français</option>
+      <option value="OTHER">أخرى</option>
+    </select>
+    <label>اسم المترجم (اختياري)</label>
+    <input type="text" id="subTranslatorInput" placeholder="مثال: أحمد ارتق">
+    <label>اسم النسخة (مثال: نسخة ويب / نسخة سينمائية)</label>
+    <input type="text" id="subNameInput" placeholder="مثال: نسخة ويب 1080p">
+    <label>وصف إضافي (اختياري)</label>
+    <textarea id="subDescInput" rows="3" placeholder="أي ملاحظات إضافية تحب تكتبها..." style="width:100%; padding:11px 12px; border-radius:9px; border:1px solid var(--border); background:var(--panel2); color:var(--text); font-size:0.9rem; outline:none; font-family:inherit; resize:vertical;"></textarea>
+    <label>رابط تحميل الترجمة المباشر (GitHub / Telegram)</label>
+    <input type="text" id="subUrlInput" placeholder="https://...">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeExtraLinksModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveExtraLinks()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+/* =======================================================
+   لازم تحط مفتاح OMDb مجاني هون (خطوات الحصول عليه بالأسفل)
+   1. روح لـ omdbapi.com/apikey.aspx
+   2. اختر "Free" واكتب إيميلك بس (بدون استمارة طويلة)
+   3. المفتاح بيوصلك على إيميلك خلال دقائق، انسخه وحطه هون
+   ملاحظة: OMDb بياناته إنجليزي بالدرجة الأولى (مو مدعوم عربي زي TMDB)
+   ======================================================= */
+const OMDB_API_KEY = 'a67ed9f0';
+const OMDB_BASE = 'https://www.omdbapi.com/';
+
+/* مفتاح TMDB — مصدر بديل بيدعم العربي فعليًا */
+const TMDB_API_KEY = 'bf17889a08163f11dfdb4b6f8586f3f4';
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const TMDB_IMG_BASE = 'https://image.tmdb.org/t/p/w342';
+
+let currentSource = 'OMDB'; /* OMDB أو TMDB */
+function setSource(src){
+  currentSource = src;
+  document.getElementById('sourceSelect').value = src;
+  checkApiKey();
+  const q = searchBox.value.trim();
+  if(q.length >= 2){
+    doSearch(q); /* إعادة البحث تلقائيًا بنفس الاسم عند تبديل المصدر */
+  } else {
+    resultsDrop.classList.remove('open');
+  }
+}
+
+let searchTimer = null;
+let currentMovie = null;
+
+function checkApiKey(){
+  let missing;
+  if(currentSource==='OMDB'){
+    missing = !OMDB_API_KEY || OMDB_API_KEY.includes('ضع_مفتاحك');
+  } else {
+    missing = !TMDB_API_KEY || TMDB_API_KEY.includes('ضع_مفتاحك');
+  }
+  document.getElementById('apiKeyBanner').style.display = missing ? 'block' : 'none';
+  return !missing;
+}
+
+const searchBox = document.getElementById('searchBox');
+const resultsDrop = document.getElementById('resultsDrop');
+const clearBtn = document.getElementById('clearBtn');
+
+searchBox.addEventListener('input', ()=>{
+  clearBtn.style.display = searchBox.value ? 'block' : 'none';
+  clearTimeout(searchTimer);
+  const q = searchBox.value.trim();
+  if(q.length < 2){ resultsDrop.classList.remove('open'); return; }
+  searchTimer = setTimeout(()=>doSearch(q), 400); /* بحث مؤجل شوي عشان ما نرسل طلب كل ضغطة حرف */
+});
+
+function clearSearch(){
+  searchBox.value = '';
+  clearBtn.style.display = 'none';
+  resultsDrop.classList.remove('open');
+  searchBox.focus();
+}
+
+function manualSearch(){
+  clearTimeout(searchTimer);
+  const q = searchBox.value.trim();
+  if(q.length >= 2) doSearch(q);
+}
+
+async function doSearch(query){
+  if(!checkApiKey()){
+    resultsDrop.innerHTML = '<div class="search-msg">ضيف مفتاح '+currentSource+' الأول (شوف التنبيه الأحمر بالأعلى)</div>';
+    resultsDrop.classList.add('open');
+    return;
+  }
+  resultsDrop.innerHTML = '<div class="search-msg"><span class="spinner"></span></div>';
+  resultsDrop.classList.add('open');
+  try{
+    if(currentSource==='OMDB'){
+      const url = `${OMDB_BASE}?apikey=${OMDB_API_KEY}&s=${encodeURIComponent(query)}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if(data.Response !== 'True' || !data.Search){
+        resultsDrop.innerHTML = `<div class="search-msg">${data.Error==='Invalid API key!' ? 'المفتاح غلط، تأكد منه' : 'ما لقينا نتائج لهالاسم'}</div>`;
+        return;
+      }
+      const items = data.Search.slice(0,12);
+      resultsDrop.innerHTML = items.map(item=>{
+        const poster = (item.Poster && item.Poster !== 'N/A') ? item.Poster : '';
+        return `<div class="result-row" onclick="selectMovie('${item.imdbID}', 'OMDB')">
+          ${poster ? `<img class="result-poster" src="${poster}" alt="">` : `<div class="result-poster"></div>`}
+          <div class="result-info">
+            <div class="result-title">${escapeHtml(item.Title)}</div>
+            <div class="result-year">${item.Year || '—'} · ${item.Type==='series' ? 'مسلسل' : 'فيلم'}</div>
+          </div>
+        </div>`;
+      }).join('');
+    } else {
+      const url = `${TMDB_BASE}/search/multi?api_key=${TMDB_API_KEY}&language=ar&query=${encodeURIComponent(query)}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      const items = (data.results||[]).filter(r => r.media_type==='movie' || r.media_type==='tv').slice(0,12);
+      if(items.length===0){
+        resultsDrop.innerHTML = '<div class="search-msg">ما لقينا نتائج لهالاسم</div>';
+        return;
+      }
+      resultsDrop.innerHTML = items.map(item=>{
+        const title = item.title || item.name || '—';
+        const date = item.release_date || item.first_air_date || '';
+        const year = date ? date.slice(0,4) : '—';
+        const poster = item.poster_path ? TMDB_IMG_BASE+item.poster_path : '';
+        return `<div class="result-row" onclick="selectMovie(${item.id}, 'TMDB', '${item.media_type}')">
+          ${poster ? `<img class="result-poster" src="${poster}" alt="">` : `<div class="result-poster"></div>`}
+          <div class="result-info">
+            <div class="result-title">${escapeHtml(title)}</div>
+            <div class="result-year">${year} · ${item.media_type==='tv' ? 'مسلسل' : 'فيلم'}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+  }catch(err){
+    console.error(err);
+    resultsDrop.innerHTML = '<div class="search-msg">صار خطأ بالاتصال، تأكد من النت والمفتاح</div>';
+  }
+}
+
+/* =======================================================
+   الاتصال بـFirebase — قاعدة بيانات مشتركة لكل المستخدمين
+   ======================================================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyAPr4yoIN1szD775_QdGEK95Vd9z6UHInM",
+  authDomain: "moviemanager-6e303.firebaseapp.com",
+  projectId: "moviemanager-6e303",
+  storageBucket: "moviemanager-6e303.firebasestorage.app",
+  messagingSenderId: "786960272233",
+  appId: "1:786960272233:web:08df1fb7914f611c3a4bf8",
+  measurementId: "G-NGY6D5TN54"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+/* =======================================================
+   حالة تسجيل الدخول العامة — تتحدث تلقائيًا، وتتحكم بإظهار/إخفاء
+   أي زر تعديل أو حذف أو الإعدادات بكل الصفحة.
+   ======================================================= */
+let isLoggedIn = false;
+firebase.auth().onAuthStateChanged(function(user){
+  isLoggedIn = !!user;
+  const btn = document.getElementById('authBtn');
+  if(btn){
+    btn.textContent = isLoggedIn ? '🔓' : '🔑';
+    btn.title = isLoggedIn ? 'تسجيل الخروج' : 'تسجيل الدخول';
+  }
+  const genBtn = document.getElementById('genCodeBtn');
+  if(genBtn) genBtn.style.display = isLoggedIn ? 'flex' : 'none';
+  if(currentMovie) renderMovie(currentMovie); /* نعيد رسم الصفحة عشان تظهر/تختفي أزرار التعديل */
+});
+async function handleAuthBtnClick(){
+  if(isLoggedIn){
+    if(await showConfirm('متأكد تريد تسجيل الخروج؟', '🔓 تسجيل الخروج')) await firebase.auth().signOut();
+  } else {
+    await openLoginModal();
+  }
+}
+
+/* =======================================================
+   نقطة مهمة: بغض النظر أي مصدر استخدمت للبحث (OMDb أو TMDB)،
+   الترجمات دايمًا بتترابط بـ"معرّف IMDb" (imdb_id) الموحّد،
+   مو بمعرّف الموقع نفسه. هيك لو بحثت عن نفس الفيلم من أي مصدر،
+   بتشوف نفس الترجمات بالضبط — المكتبة موحّدة مش مقسومة حسب المصدر.
+   ======================================================= */
+async function selectMovie(id, source, tmdbType){
+  resultsDrop.classList.remove('open');
+  document.getElementById('content').innerHTML = '<div class="search-msg" style="padding:60px 0;"><span class="spinner"></span></div>';
+  try{
+    if(source==='OMDB'){
+      const url = `${OMDB_BASE}?apikey=${OMDB_API_KEY}&i=${id}&plot=full`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if(data.Response !== 'True'){
+        document.getElementById('content').innerHTML = '<div class="empty-state"><p>ما قدرنا نجيب معلومات هالعنوان</p></div>';
+        return;
+      }
+      currentMovie = {
+        id: id, /* imdbID أصلاً بهالحالة */
+        title: data.Title,
+        year: data.Year,
+        poster: (data.Poster && data.Poster !== 'N/A') ? data.Poster : '',
+        overview: data.Plot,
+        rating: (data.imdbRating && data.imdbRating !== 'N/A') ? parseFloat(data.imdbRating) : null
+      };
+    } else {
+      const mediaType = tmdbType || 'movie';
+      const url = `${TMDB_BASE}/${mediaType}/${id}?api_key=${TMDB_API_KEY}&language=ar&append_to_response=external_ids`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      /* imdb_id بيجي مباشرة بالأفلام، وبالمسلسلات لازم من external_ids */
+      const imdbId = data.imdb_id || (data.external_ids && data.external_ids.imdb_id) || ('tmdb_'+mediaType+'_'+id);
+      currentMovie = {
+        id: imdbId,
+        title: data.title || data.name,
+        year: (data.release_date || data.first_air_date || '').slice(0,4),
+        poster: data.poster_path ? TMDB_IMG_BASE+data.poster_path : '',
+        overview: data.overview,
+        rating: data.vote_average ? Number(data.vote_average) : null
+      };
+    }
+    await renderMovie(currentMovie);
+  }catch(err){
+    console.error(err);
+    document.getElementById('content').innerHTML = '<div class="empty-state"><p>صار خطأ بتحميل المعلومات</p></div>';
+  }
+}
+
+async function renderMovie(m){
+  const poster = m.poster || '';
+  const overview = m.overview || 'ما فيه وصف متوفر لهالعنوان (بيانات OMDb إنجليزي بالدرجة الأولى).';
+  const movieDoc = await getMovieDoc(m.id);
+  const subs = movieDoc.items;
+  const extras = { youtube: movieDoc.youtube, telegram: movieDoc.telegram };
+  const subsHtml = subs.length > 0
+    ? subs.map(s=>{
+        const metaParts = [];
+        if(s.translator) metaParts.push('🖊️ ' + s.translator);
+        if(s.desc) metaParts.push(s.desc);
+        return `
+        <div class="sub-item">
+          <span class="sub-lang">${s.lang}</span>
+          <span class="sub-name">${escapeHtml(s.name || 'ترجمة')}</span>
+          <button class="sub-dl" onclick="downloadSubtitle('${escapeAttr(s.url)}', this)">⬇ تحميل</button>
+          ${isLoggedIn ? `<button class="sub-icon-btn danger" onclick="deleteSubtitle('${s.id}')" title="حذف">🗑️</button>` : ''}
+          ${metaParts.length ? `<span class="sub-meta">${escapeHtml(metaParts.join(' — '))}</span>` : ''}
+        </div>`;
+      }).join('')
+    : `<div class="no-sub"><span class="icon">📭</span>الترجمة غير متوفرة حاليًا لهالعنوان</div>`;
+
+  const subscribed = isSubscribed();
+  const telegramBtnHtml = extras.telegram
+    ? (subscribed
+        ? `<a class="link-btn telegram" href="${escapeAttr(extras.telegram)}" target="_blank">🎬 مشاهدة الفيلم</a>`
+        : `<button class="link-btn telegram" onclick="openUnlockCodeModal('${escapeAttr(extras.telegram)}')">🔒 مشاهدة الفيلم (اشتراك)</button>`)
+    : '';
+  const linksRowHtml = (extras.youtube || extras.telegram) ? `
+    <div class="links-row">
+      ${extras.youtube ? `<a class="link-btn youtube" href="${escapeAttr(extras.youtube)}" target="_blank">▶ مشاهدة المقطع الدعائي</a>` : ''}
+      ${telegramBtnHtml}
+    </div>` : '';
+
+  const settingsIconHtml = isLoggedIn
+    ? `<button class="sub-icon-btn" onclick="openExtraLinksModal()" title="الإعدادات">⚙️</button>`
+    : '';
+
+  document.getElementById('content').innerHTML = `
+    <div class="movie-card">
+      ${poster ? `<img class="movie-poster" src="${poster}">` : `<div class="movie-poster"></div>`}
+      <div class="movie-meta">
+        <div class="movie-title">${escapeHtml(m.title)}</div>
+        <div class="movie-year">${m.year || '—'}</div>
+        ${m.rating ? `<div class="movie-rating">⭐ ${m.rating.toFixed(1)}/10</div>` : ''}
+        <div class="movie-overview">${escapeHtml(overview)}</div>
+      </div>
+    </div>
+    ${(linksRowHtml || settingsIconHtml) ? `
+    <div class="sub-section" style="display:flex; align-items:flex-start; gap:10px;">
+      <div style="flex:1;">${linksRowHtml}</div>
+      ${settingsIconHtml}
+    </div>` : ''}
+    <div class="sub-section">
+      <h3>📄 الترجمات المتوفرة</h3>
+      ${subsHtml}
+    </div>
+  `;
+}
+
+/* =======================================================
+   روابط إضافية (إعلان يوتيوب + منشور تيليجرام) — نخزنها بنفس مستند
+   الفيلم (subtitles/{imdbID}) جنب roomت items، عشان قراءة وحدة بس.
+   ======================================================= */
+async function getMovieDoc(movieId){
+  try{
+    const getPromise = db.collection('subtitles').doc(movieId).get();
+    const timeoutPromise = new Promise((_,rej)=>setTimeout(()=>rej(new Error('firestore-timeout')), 12000));
+    const doc = await Promise.race([getPromise, timeoutPromise]);
+    if(!doc.exists) return { items: [], youtube: '', telegram: '' };
+    const data = doc.data();
+    return { items: data.items || [], youtube: data.youtube || '', telegram: data.telegram || '' };
+  }catch(err){
+    console.error('Firestore read error', err);
+    return { items: [], youtube: '', telegram: '' };
+  }
+}
+async function getSubtitlesFor(movieId){
+  const d = await getMovieDoc(movieId);
+  return d.items;
+}
+async function getExtrasFor(movieId){
+  const d = await getMovieDoc(movieId);
+  return { youtube: d.youtube, telegram: d.telegram };
+}
+async function openExtraLinksModal(){
+  if(!(await checkOwnerAccess())) return;
+  const extras = await getExtrasFor(currentMovie.id);
+  document.getElementById('youtubeInput').value = extras.youtube || '';
+  document.getElementById('telegramInput').value = extras.telegram || '';
+  document.getElementById('subEditingId').value = '';
+  document.getElementById('subModalTitle').textContent = '➕ إضافة ترجمة جديدة (اختياري)';
+  document.getElementById('subLangInput').value = 'AR';
+  document.getElementById('subTranslatorInput').value = '';
+  document.getElementById('subNameInput').value = '';
+  document.getElementById('subDescInput').value = '';
+  document.getElementById('subUrlInput').value = '';
+  document.getElementById('extraLinksModal').classList.add('open');
+}
+function closeExtraLinksModal(){
+  document.getElementById('extraLinksModal').classList.remove('open');
+}
+async function saveExtraLinks(){
+  if(!currentMovie) return;
+  const youtube = document.getElementById('youtubeInput').value.trim();
+  const telegram = document.getElementById('telegramInput').value.trim();
+  const editingId = document.getElementById('subEditingId').value;
+  const subUrl = document.getElementById('subUrlInput').value.trim();
+  const subLang = document.getElementById('subLangInput').value;
+  const subTranslator = document.getElementById('subTranslatorInput').value.trim();
+  const subName = document.getElementById('subNameInput').value.trim();
+  const subDesc = document.getElementById('subDescInput').value.trim();
+  const saveBtn = document.querySelector('#extraLinksModal .btn-save');
+  saveBtn.textContent = 'جاري الحفظ...';
+  saveBtn.disabled = true;
+  try{
+    const docRef = db.collection('subtitles').doc(currentMovie.id);
+    const update = { youtube, telegram };
+    /* لو فيه رابط ترجمة مكتوب، نضيفه كترجمة جديدة أو نعدّل وحدة موجودة (لو جاي من زر تعديل ✏️) */
+    if(subUrl){
+      const existing = await getSubtitlesFor(currentMovie.id);
+      let newItems;
+      if(editingId){
+        newItems = existing.map(s => s.id===editingId ? { id: editingId, lang: subLang, translator: subTranslator, name: subName, desc: subDesc, url: subUrl } : s);
+      } else {
+        const newId = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+        newItems = [...existing, { id: newId, lang: subLang, translator: subTranslator, name: subName, desc: subDesc, url: subUrl }];
+        /* بس لما تضاف ترجمة جديدة فعليًا (مو تعديل)، نحدّث معلومات العرض عشان قسم "آخر الأفلام المضافة" */
+        update.title = currentMovie.title || '';
+        update.poster = currentMovie.poster || '';
+        update.year = currentMovie.year || '';
+        update.lastUpdated = Date.now();
+      }
+      update.items = newItems;
+    }
+    await docRef.set(update, { merge: true });
+    closeExtraLinksModal();
+    await renderMovie(currentMovie);
+  }catch(err){
+    console.error('Firestore write error', err);
+    alert('صار خطأ بالحفظ، تأكد من الاتصال وحاول مرة ثانية');
+  }
+  saveBtn.textContent = 'حفظ';
+  saveBtn.disabled = false;
+}
+
+/* =======================================================
+   تخزين روابط الترجمات على Firestore — مشتركة بين كل المستخدمين.
+   كل فيلم = مستند (document) بمجموعة "subtitles"، معرّفه هو imdbID،
+   وجوّاه array اسمه items فيه كل روابط الترجمة، كل وحدة إلها id ثابت
+   (مو مبني على arrayUnion وحده) عشان نقدر نعدّل/نحذف عنصر محدد بدقة.
+
+   ⚠️ ملاحظة مهمة: بما إن قواعد الحماية حاليًا "if true" (مفتوحة للجميع)،
+   أي شخص يستخدم التطبيق يقدر يعدّل أو يحذف أي رابط، حتى لو مو هو يلي ضافه.
+   هاي كافية لمرحلة التجربة الحالية، بس لو صار عندك مستخدمين كتير وحبيت
+   تمنع هالشي، بنحتاج نضيف تسجيل دخول حقيقي (Firebase Authentication).
+   ======================================================= */
+
+/* =======================================================
+   حماية حقيقية للإضافة/التعديل/الحذف عبر Firebase Authentication.
+   البحث والتصفح والتحميل يضلوا مفتوحين للجميع بدون أي قيد.
+   الحساب الوحيد المسموح له يعدّل هو الحساب يلي أنشأناه يدويًا
+   بلوحة Firebase (Authentication > Users) — مو رمز مخبّى بالكود.
+   قاعدة الحماية بـFirestore (Rules) هي يلي فعليًا بتتحقق من تسجيل
+   الدخول، فحتى لو حد شاف الكود كامل، ما رح يلاقي أي رمز سري يستخدمه.
+   ======================================================= */
+async function checkOwnerAccess(){
+  if(firebase.auth().currentUser) return true;
+  return await openLoginModal();
+}
+
+function openLoginModal(){
+  return new Promise(resolve=>{
+    _loginResolve = resolve;
+    document.getElementById('loginError').style.display = 'none';
+    document.getElementById('loginModal').classList.add('open');
+  });
+}
+function closeLoginModal(){
+  document.getElementById('loginModal').classList.remove('open');
+  if(_loginResolve){ _loginResolve(false); _loginResolve = null; }
+}
+let _loginResolve = null;
+
+let _confirmResolve = null;
+function showConfirm(message, title){
+  document.getElementById('confirmModalTitle').textContent = title || '⚠️ تأكيد';
+  document.getElementById('confirmModalMsg').textContent = message;
+  document.getElementById('confirmModal').classList.add('open');
+  return new Promise(resolve=>{ _confirmResolve = resolve; });
+}
+function resolveConfirmModal(result){
+  document.getElementById('confirmModal').classList.remove('open');
+  if(_confirmResolve){ _confirmResolve(result); _confirmResolve = null; }
+}
+
+/* =======================================================
+   نظام كود الاشتراك — مشاهدة الفيلم (رابط تيليجرام) مقفولة بكود،
+   بينما الترجمة تضل مجانية للجميع دايمًا بدون أي قيد.
+   الكود نفسه مخزّن بـFirestore (مجموعة "codes")، وبعد ما يتفعّل
+   بنجاح، بيتخزن تاريخ انتهائه محليًا بجهاز الشخص (localStorage)
+   عشان ما يحتاج يعيد كتابته كل مرة يفتح التطبيق.
+
+   ⚠️ الكود مقفول على أول جهاز يفعّله بس (single-device):
+   أول تفعيل، منسجّل "معرّف الجهاز" (رقم عشوائي محفوظ بمتصفح
+   هالجهاز نفسه) داخل مستند الكود. أي محاولة تفعيل لاحقة من جهاز
+   مختلف بترفض تلقائيًا. ملاحظة صريحة: هاي حماية على مستوى المتصفح
+   مو حساب حقيقي — لو الشخص مسح بيانات المتصفح بالكامل (Clear
+   Browsing Data) بينشئله التطبيق "جهاز جديد" ظاهريًا، وقتها الكود
+   يرفضه رغم إنه نفس الجهاز فعليًا. هاي أقصى حماية ممكنة بدون نظام
+   حسابات حقيقي.
+   ======================================================= */
+function getDeviceId(){
+  let id = localStorage.getItem('subhub_device_id');
+  if(!id){
+    id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+    localStorage.setItem('subhub_device_id', id);
+  }
+  return id;
+}
+function isSubscribed(){
+  const until = parseInt(localStorage.getItem('subhub_unlock_until') || '0', 10);
+  return Date.now() < until;
+}
+
+let _pendingTelegramUrl = null;
+function openUnlockCodeModal(telegramUrl){
+  _pendingTelegramUrl = telegramUrl;
+  document.getElementById('unlockCodeInput').value = '';
+  document.getElementById('unlockCodeError').style.display = 'none';
+  document.getElementById('unlockCodeModal').classList.add('open');
+}
+function closeUnlockCodeModal(){
+  document.getElementById('unlockCodeModal').classList.remove('open');
+}
+async function submitUnlockCode(){
+  const code = document.getElementById('unlockCodeInput').value.trim().toUpperCase();
+  const errEl = document.getElementById('unlockCodeError');
+  errEl.style.display = 'none';
+  if(!code){ errEl.textContent = 'اكتب الكود الأول'; errEl.style.display='block'; return; }
+  const okBtn = document.querySelector('#unlockCodeModal .btn-save');
+  okBtn.textContent = 'جاري التحقق...';
+  okBtn.disabled = true;
+  try{
+    const docRef = db.collection('codes').doc(code);
+    const doc = await docRef.get();
+    if(!doc.exists){
+      errEl.textContent = 'الكود غير صحيح';
+      errEl.style.display = 'block';
+    } else {
+      const data = doc.data();
+      const myDeviceId = getDeviceId();
+      if(Date.now() > data.expiresAt){
+        errEl.textContent = 'الكود منتهي الصلاحية';
+        errEl.style.display = 'block';
+      } else if(data.usedByDevice && data.usedByDevice !== myDeviceId){
+        errEl.textContent = 'هالكود مستخدم من قبل على جهاز آخر — كل كود يشتغل على جهاز واحد فقط';
+        errEl.style.display = 'block';
+      } else {
+        if(!data.usedByDevice){
+          /* أول تفعيل لهالكود — نقفله على هالجهاز */
+          await docRef.set({ usedByDevice: myDeviceId, usedAt: Date.now() }, { merge: true });
+        }
+        localStorage.setItem('subhub_unlock_until', String(data.expiresAt));
+        closeUnlockCodeModal();
+        if(_pendingTelegramUrl) window.open(_pendingTelegramUrl, '_blank');
+        if(currentMovie) await renderMovie(currentMovie);
+      }
+    }
+  }catch(err){
+    console.error('code check error', err);
+    errEl.textContent = 'صار خطأ بالتحقق، تأكد من الاتصال';
+    errEl.style.display = 'block';
+  }
+  okBtn.textContent = 'تفعيل';
+  okBtn.disabled = false;
+}
+
+
+async function openGenerateCodeModal(){
+  if(!(await checkOwnerAccess())) return;
+  document.getElementById('generatedCodeBox').style.display = 'none';
+  document.getElementById('codeCustomerName').value = '';
+  document.getElementById('replaceOldCodeInput').value = '';
+  document.getElementById('generateCodeModal').classList.add('open');
+  loadCodesList();
+}
+function closeGenerateCodeModal(){
+  document.getElementById('generateCodeModal').classList.remove('open');
+}
+
+/* ينشئ كود عشوائي جديد بقاعدة البيانات، ويرجع الكود نفسه */
+async function createNewCode(customerName, days){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; /* بدون حروف/أرقام متشابهة (0/O, 1/I) */
+  let rand = '';
+  for(let i=0;i<12;i++) rand += chars[Math.floor(Math.random()*chars.length)];
+  const code = 'SUB-' + rand.slice(0,4) + '-' + rand.slice(4,8) + '-' + rand.slice(8,12);
+  const expiresAt = Date.now() + days*24*60*60*1000;
+  await db.collection('codes').doc(code).set({
+    expiresAt, createdAt: Date.now(), durationDays: days, customerName: customerName || ''
+  });
+  return code;
+}
+
+function getSelectedDurationDays(){
+  const count = parseInt(document.getElementById('codeDurationCount').value, 10) || 1;
+  const unitDays = parseInt(document.getElementById('codeDurationUnit').value, 10);
+  return count * unitDays;
+}
+
+async function generateSubCode(){
+  const days = getSelectedDurationDays();
+  const customerName = document.getElementById('codeCustomerName').value.trim();
+  try{
+    const code = await createNewCode(customerName, days);
+    document.getElementById('generatedCodeText').textContent = code;
+    document.getElementById('generatedCodeBox').style.display = 'block';
+    loadCodesList();
+  }catch(err){
+    console.error('code generation error', err);
+    alert('صار خطأ بتوليد الكود، تأكد من الاتصال وحاول مرة ثانية');
+  }
+}
+
+/* يلغي كود قديم فورًا (بخليه منتهي الصلاحية) وينشئله بديل جديد بنفس الاسم */
+async function replaceSubCode(){
+  const oldCode = document.getElementById('replaceOldCodeInput').value.trim().toUpperCase();
+  if(!oldCode){ alert('اكتب الكود القديم الأول'); return; }
+  const days = getSelectedDurationDays();
+  try{
+    const oldRef = db.collection('codes').doc(oldCode);
+    const oldDoc = await oldRef.get();
+    if(!oldDoc.exists){ alert('ما لقينا هالكود بقاعدة البيانات'); return; }
+    const oldData = oldDoc.data();
+    /* نلغي القديم فورًا بخليه منتهي الصلاحية */
+    await oldRef.set({ expiresAt: 0 }, { merge: true });
+    const newCode = await createNewCode(oldData.customerName || '', days);
+    document.getElementById('generatedCodeText').textContent = newCode;
+    document.getElementById('generatedCodeBox').style.display = 'block';
+    document.getElementById('replaceOldCodeInput').value = '';
+    loadCodesList();
+  }catch(err){
+    console.error('code replace error', err);
+    alert('صار خطأ بالاستبدال، تأكد من الاتصال وحاول مرة ثانية');
+  }
+}
+
+/* يعرض كل الأكواد يلي اتولّدت من قبل — للمالك بس، عشان يتذكر مين ياخذ أي كود */
+async function loadCodesList(){
+  const box = document.getElementById('codesListBox');
+  box.innerHTML = '<div class="search-msg"><span class="spinner"></span></div>';
+  try{
+    const snap = await db.collection('codes').orderBy('createdAt', 'desc').limit(100).get();
+    if(snap.empty){
+      box.innerHTML = '<div class="no-sub" style="padding:12px;">ما فيه أكواد متولّدة لسا</div>';
+      return;
+    }
+    const now = Date.now();
+    const rows = [];
+    snap.forEach(doc=>{
+      const d = doc.data();
+      const active = now < d.expiresAt;
+      rows.push(`
+        <div class="code-item">
+          <span class="ci-name">${escapeHtml(d.customerName || 'بدون اسم')}</span>
+          <span class="ci-code">${doc.id}</span>
+          <span class="code-status ${active ? 'active' : 'expired'}">${active ? 'نشط' : 'منتهي'}</span>
+          <button class="sub-icon-btn danger" onclick="deleteSubCode('${doc.id}')" title="حذف">🗑️</button>
+        </div>`);
+    });
+    box.innerHTML = rows.join('');
+  }catch(err){
+    console.error('load codes error', err);
+    box.innerHTML = '<div class="no-sub" style="padding:12px;">صار خطأ بتحميل القائمة</div>';
+  }
+}
+
+async function deleteSubCode(code){
+  if(!(await showConfirm('متأكد تحذف هالكود نهائيًا؟ أي محاولة تفعيل له بعدها بترفض تلقائيًا.', '🗑️ حذف الكود'))) return;
+  try{
+    await db.collection('codes').doc(code).delete();
+    loadCodesList();
+  }catch(err){
+    console.error('delete code error', err);
+    alert('صار خطأ بالحذف، تأكد من الاتصال وحاول مرة ثانية');
+  }
+}
+
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  if(!email || !password){ errEl.textContent = 'لازم تعبّي البريد وكلمة السر'; errEl.style.display='block'; return; }
+  const loginBtn = document.querySelector('#loginModal .btn-save');
+  loginBtn.textContent = 'جاري الدخول...';
+  loginBtn.disabled = true;
+  try{
+    const signInPromise = firebase.auth().signInWithEmailAndPassword(email, password);
+    const timeoutPromise = new Promise((_,rej)=>setTimeout(()=>rej({code:'timeout', message:'ما وصل رد من Firebase خلال 15 ثانية'}), 15000));
+    await Promise.race([signInPromise, timeoutPromise]);
+    document.getElementById('loginModal').classList.remove('open');
+    document.getElementById('loginPassword').value = '';
+    if(_loginResolve){ _loginResolve(true); _loginResolve = null; }
+  }catch(err){
+    console.error('auth error', err);
+    /* نعرض كود الخطأ الحقيقي من Firebase عشان نشخّص المشكلة بدقة */
+    errEl.textContent = 'خطأ: ' + (err.code || '') + ' — ' + (err.message || 'صار خطأ غير معروف');
+    errEl.style.display = 'block';
+  }
+  loginBtn.textContent = 'دخول';
+  loginBtn.disabled = false;
+}
+
+async function deleteSubtitle(subId){
+  if(!(await checkOwnerAccess())) return;
+  if(!currentMovie) return;
+  if(!(await showConfirm('متأكد تحذف هالرابط؟ ما رح تقدر ترجعه بعدين.', '🗑️ حذف الترجمة'))) return;
+  try{
+    const existing = await getSubtitlesFor(currentMovie.id);
+    const newItems = existing.filter(s => s.id !== subId);
+    await db.collection('subtitles').doc(currentMovie.id).set({ items: newItems }, { merge: true });
+    await renderMovie(currentMovie);
+  }catch(err){
+    console.error('Firestore delete error', err);
+    alert('صار خطأ بالحذف، تأكد من الاتصال وحاول مرة ثانية');
+  }
+}
+
+async function downloadSubtitle(url, btnEl){
+  const originalText = btnEl.textContent;
+  btnEl.textContent = '...';
+  btnEl.disabled = true;
+  try{
+    const resp = await fetch(url);
+    if(!resp.ok) throw new Error('fetch failed: '+resp.status);
+    const blob = await resp.blob();
+    /* نستخرج اسم الملف من آخر جزء بالرابط، أو اسم افتراضي لو ما قدرنا */
+    let filename = decodeURIComponent(url.split('/').pop().split('?')[0]) || 'subtitle.srt';
+    if(!/\.(srt|vtt|ass|ssa|sub)$/i.test(filename)) filename += '.srt';
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(blobUrl), 8000);
+  }catch(err){
+    console.error('download error', err);
+    /* لو فشل التحميل المباشر (مشكلة CORS مثلًا)، نفتح الرابط بتبويب جديد كحل بديل */
+    window.open(url, '_blank');
+  }
+  btnEl.textContent = originalText;
+  btnEl.disabled = false;
+}
+
+function escapeHtml(str){
+  return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(str){ return escapeHtml(str); }
+
+/* =======================================================
+   قسم "آخر الأفلام المضافة" — يظهر بالصفحة الرئيسية (قبل أي بحث)،
+   ويعرض آخر الأفلام يلي انضافلها ترجمة، بالبوستر الحقيقي، مأخوذ
+   من نفس بيانات الفيلم المخزّنة أصلاً (بدون أي طلب إضافي لـOMDb/TMDB).
+   ======================================================= */
+async function renderRecentMovies(){
+  const box = document.getElementById('recentMoviesContainer');
+  if(!box) return;
+  try{
+    const snap = await db.collection('subtitles').orderBy('lastUpdated', 'desc').limit(10).get();
+    if(snap.empty){ box.innerHTML = ''; return; }
+    const cards = [];
+    snap.forEach(doc=>{
+      const d = doc.data();
+      if(!d.title) return; /* أفلام قديمة اتضافت قبل ما نبدأ نخزّن معلومات العرض */
+      cards.push(`
+        <div class="recent-card" onclick="selectMovie('${doc.id}','OMDB')">
+          ${d.poster ? `<img src="${d.poster}">` : `<div style="width:100px;height:148px;border-radius:10px;background:var(--panel2);"></div>`}
+          <div class="rc-title">${escapeHtml(d.title)}</div>
+        </div>`);
+    });
+    if(cards.length === 0){ box.innerHTML = ''; return; }
+    box.innerHTML = `
+      <div class="recent-section">
+        <h3>🎬 آخر الأفلام المضافة</h3>
+        <div class="recent-row">${cards.join('')}</div>
+      </div>`;
+  }catch(err){
+    console.error('recent movies error', err);
+    box.innerHTML = '';
+  }
+}
+
+function goHome(){
+  currentMovie = null;
+  clearSearch();
+  document.getElementById('content').innerHTML = `
+    <div id="recentMoviesContainer"></div>
+    <div class="empty-state">
+      <div class="icon">🎞️</div>
+      <p>ابحث عن اسم فيلم بالأعلى<br>لتشوف معلوماته وتشيك إذا فيه ترجمة متوفرة</p>
+    </div>`;
+  renderRecentMovies();
+}
+
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.search-wrap')) resultsDrop.classList.remove('open');
+});
+
+checkApiKey();
+renderRecentMovies();
+</script>
+</body>
+</html>
