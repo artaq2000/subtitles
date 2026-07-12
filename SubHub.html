@@ -107,6 +107,14 @@ body{
   background:var(--panel); border:1px solid var(--border); border-radius:16px;
   padding:16px; margin-bottom:16px;
 }
+.links-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.link-btn{
+  flex:1; min-width:140px; display:flex; align-items:center; justify-content:center; gap:6px;
+  padding:11px; border-radius:10px; text-decoration:none; font-size:0.85rem; font-weight:700;
+  border:none; cursor:pointer; font-family:inherit;
+}
+.link-btn.youtube{ background:#ff3b30; color:#fff; }
+.link-btn.telegram{ background:#229ed9; color:#fff; }
 .sub-section h3{ margin:0 0 12px; font-size:0.95rem; color:var(--muted); font-weight:700; }
 .sub-item{
   display:flex; align-items:center; gap:10px; padding:12px;
@@ -245,6 +253,20 @@ body{
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeLoginModal()">إلغاء</button>
       <button class="btn-save" onclick="doLogin()">دخول</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="extraLinksModal">
+  <div class="modal-box">
+    <h4>🔗 روابط إضافية لهالعنوان</h4>
+    <label>▶ رابط إعلان يوتيوب (تريلر)</label>
+    <input type="text" id="youtubeInput" placeholder="https://youtube.com/watch?v=...">
+    <label>📢 رابط منشور قناة تيليجرام</label>
+    <input type="text" id="telegramInput" placeholder="https://t.me/artaq12/...">
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeExtraLinksModal()">إلغاء</button>
+      <button class="btn-save" onclick="saveExtraLinks()">حفظ</button>
     </div>
   </div>
 </div>
@@ -444,6 +466,7 @@ async function renderMovie(m){
   const poster = m.poster || '';
   const overview = m.overview || 'ما فيه وصف متوفر لهالعنوان (بيانات OMDb إنجليزي بالدرجة الأولى).';
   const subs = await getSubtitlesFor(m.id);
+  const extras = await getExtrasFor(m.id);
   const subsHtml = subs.length > 0
     ? subs.map(s=>`
         <div class="sub-item">
@@ -454,6 +477,12 @@ async function renderMovie(m){
           <button class="sub-icon-btn danger" onclick="deleteSubtitle('${s.id}')" title="حذف">🗑️</button>
         </div>`).join('')
     : `<div class="no-sub"><span class="icon">📭</span>الترجمة غير متوفرة حاليًا لهالعنوان</div>`;
+
+  const linksRowHtml = (extras.youtube || extras.telegram) ? `
+    <div class="links-row">
+      ${extras.youtube ? `<a class="link-btn youtube" href="${escapeAttr(extras.youtube)}" target="_blank">▶ الإعلان</a>` : ''}
+      ${extras.telegram ? `<a class="link-btn telegram" href="${escapeAttr(extras.telegram)}" target="_blank">📢 تيليجرام</a>` : ''}
+    </div>` : '';
 
   document.getElementById('content').innerHTML = `
     <div class="movie-card">
@@ -466,11 +495,59 @@ async function renderMovie(m){
       </div>
     </div>
     <div class="sub-section">
+      ${linksRowHtml}
+      <button class="add-sub-btn" onclick="openExtraLinksModal()">✏️ تعديل روابط الإعلان/تيليجرام</button>
+    </div>
+    <div class="sub-section">
       <h3>📄 الترجمات المتوفرة</h3>
       ${subsHtml}
       <button class="add-sub-btn" onclick="openAddSubModal()">➕ إضافة رابط ترجمة لهالعنوان</button>
     </div>
   `;
+}
+
+/* =======================================================
+   روابط إضافية (إعلان يوتيوب + منشور تيليجرام) — نخزنها بنفس مستند
+   الفيلم (subtitles/{imdbID}) جنب roomت items، عشان قراءة وحدة بس.
+   ======================================================= */
+async function getExtrasFor(movieId){
+  try{
+    const doc = await db.collection('subtitles').doc(movieId).get();
+    if(!doc.exists) return {};
+    const data = doc.data();
+    return { youtube: data.youtube || '', telegram: data.telegram || '' };
+  }catch(err){
+    console.error('Firestore read error', err);
+    return {};
+  }
+}
+async function openExtraLinksModal(){
+  if(!(await checkOwnerAccess())) return;
+  const extras = await getExtrasFor(currentMovie.id);
+  document.getElementById('youtubeInput').value = extras.youtube || '';
+  document.getElementById('telegramInput').value = extras.telegram || '';
+  document.getElementById('extraLinksModal').classList.add('open');
+}
+function closeExtraLinksModal(){
+  document.getElementById('extraLinksModal').classList.remove('open');
+}
+async function saveExtraLinks(){
+  if(!currentMovie) return;
+  const youtube = document.getElementById('youtubeInput').value.trim();
+  const telegram = document.getElementById('telegramInput').value.trim();
+  const saveBtn = document.querySelector('#extraLinksModal .btn-save');
+  saveBtn.textContent = 'جاري الحفظ...';
+  saveBtn.disabled = true;
+  try{
+    await db.collection('subtitles').doc(currentMovie.id).set({ youtube, telegram }, { merge: true });
+    closeExtraLinksModal();
+    await renderMovie(currentMovie);
+  }catch(err){
+    console.error('Firestore write error', err);
+    alert('صار خطأ بالحفظ، تأكد من الاتصال وحاول مرة ثانية');
+  }
+  saveBtn.textContent = 'حفظ';
+  saveBtn.disabled = false;
 }
 
 /* =======================================================
